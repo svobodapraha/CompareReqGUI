@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>566</width>
-    <height>297</height>
+    <height>338</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,12 +19,26 @@
      <x>21</x>
      <y>11</y>
      <width>521</width>
-     <height>261</height>
+     <height>321</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>OLD:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QTextBrowser" name="textBrowser_oldReq"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>NEW:</string>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QTextBrowser" name="textBrowser_newReq"/>

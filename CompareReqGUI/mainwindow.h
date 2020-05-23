@@ -1,11 +1,13 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+
 #include <QMainWindow>
 #include <QDebug>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QSettings>
+#include <QHostInfo>
 
 #include "xlsxdocument.h"
 #include "xlsxchartsheet.h"
@@ -15,6 +17,9 @@
 #include "xlsxworkbook.h"
 
 #include "detailview.h"
+#include <windows.h>
+
+
 using namespace QXlsx;
 
 namespace Ui {
@@ -67,6 +72,9 @@ private:
 
     void setChangesTableNotEditable();
     void checkAll(bool boCheck);
+
+    QString asUserAndHostName;
+
 };
 
 
