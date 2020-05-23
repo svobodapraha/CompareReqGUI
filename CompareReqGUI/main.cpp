@@ -7,8 +7,8 @@ int main(int argc, char *argv[])
     //set version
     a.setApplicationVersion(APP_VERSION);
 
-    MainWindow w;
-    w.show();
+    MainWindow w(a.arguments());
+    if(!w.boBatchProcessing)w.show();
 
     return a.exec();
 }

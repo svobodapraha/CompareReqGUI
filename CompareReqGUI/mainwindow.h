@@ -31,8 +31,15 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(QStringList arguments,QWidget *parent = 0);
     ~MainWindow();
+
+    bool boBatchProcessing;
+    int iExitCode;
+
+signals:
+    void startBatchProcessing(int iID);
+
 
 private slots:
     void on_btnWrite_clicked();
@@ -55,6 +62,9 @@ private slots:
 
     void on_btn_SortReq_clicked();
 
+    int batchProcessing(int iID);
+
+
 private:
     Ui::MainWindow *ui;
 
@@ -74,6 +84,8 @@ private:
     void checkAll(bool boCheck);
 
     QString asUserAndHostName;
+    QStringList comLineArgList;
+
 
 };
 
@@ -94,6 +106,15 @@ private:
 
 
 #define kn_ReportFirstInfoRow           1
+
+#define knBatchProcessingID  1
+
+#define knExitStatusBadSignal               1
+#define knExitStatusReporFileOpened         2
+#define knExitStatusInvalidInputFilenames   3
+#define knExitStatusCannotLoadInputFiles    4
+#define knExitStatusNoResultDoc             5
+
 
 
 #endif // MAINWINDOW_H

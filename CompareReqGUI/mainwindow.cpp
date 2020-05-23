@@ -64,7 +64,7 @@ QString ignoreWhiteAndCase(QString asValue)
 
 
 
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(QStringList arguments, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
@@ -139,6 +139,62 @@ MainWindow::MainWindow(QWidget *parent) :
       qDebug() << asUserAndHostName;
 
 
+      //CLI
+      //queued connection - start after leaving constructor in case of batch processing
+      connect(this,SIGNAL(startBatchProcessing(int)),
+              SLOT(batchProcessing(int)),
+              Qt::QueuedConnection);
+
+
+      //process command line arguments
+      comLineArgList = arguments;
+      ////remove exec name
+      if(comLineArgList.size() > 0) comLineArgList.removeFirst();
+
+      if(comLineArgList.size() >= 2)
+      {
+        ui->lineEdit_NewReq->setText(comLineArgList.at(0).trimmed());
+        comLineArgList.removeFirst();
+        ui->lineEdit_OldReq->setText(comLineArgList.at(0).trimmed());
+        comLineArgList.removeFirst();
+
+
+        if(comLineArgList.contains("-a")) ui->cbOnlyFuncReq->setChecked(false);
+        else                              ui->cbOnlyFuncReq->setChecked(true);
+
+        if(comLineArgList.contains("-w")) ui->cb_IngnoreWaC->setChecked(true);
+        else                              ui->cb_IngnoreWaC->setChecked(false);
+
+
+
+        //check for batch processing (without window)
+        boBatchProcessing = false;
+        iExitCode = 0;
+        if(comLineArgList.contains("-b"))
+        {
+           //do not show main window, process without it
+           boBatchProcessing = true;
+           startBatchProcessing(knBatchProcessingID);
+           //qDebug() << "BATCH PROCESSING STARTED, SHOULD BE FIRST";
+
+        }
+
+     }
+
+
+}
+
+
+int MainWindow::batchProcessing(int iID)
+{
+  iExitCode = 0;
+  if (iID != knBatchProcessingID) iExitCode = knExitStatusBadSignal;
+  if(!iExitCode)  this->on_btnCompare_clicked();
+  if(!iExitCode)  this->on_btnWrite_clicked();
+
+  QCoreApplication::exit(iExitCode);
+
+  return(iExitCode);
 
 
 }
@@ -208,9 +264,10 @@ void MainWindow::on_btnWrite_clicked()
     reportDoc.write(iReportCurrentRow++, 1, "new file: " + fileName_NewReq);
     reportDoc.write(iReportCurrentRow++, 1, "old file: " + fileName_OldReq);
     QString asCompareCondition = "";
-    if(ui->cbOnlyFuncReq->isChecked()) asCompareCondition += "Only Function Requiments ";
-    if(ui->cb_IngnoreWaC->isChecked()) asCompareCondition += "Ignore White Spaces and Case";
-    reportDoc.write(iReportCurrentRow++, 1, "Compare condition: " + asCompareCondition);
+    if(ui->cbOnlyFuncReq->isChecked()) asCompareCondition += ":Only Function Requiments:";
+    if(ui->cb_IngnoreWaC->isChecked()) asCompareCondition += ":Ignore White Spaces and Case:";
+    if(boBatchProcessing)              asCompareCondition += ":Batch Processing:";
+    reportDoc.write(iReportCurrentRow++, 1, asCompareCondition);
     int iRowWhereToWriteNumberOfReqWritten = iReportCurrentRow++;
 
 // one blank line
@@ -371,17 +428,45 @@ void MainWindow::on_btnWrite_clicked()
     {
        if(!reportDoc.saveAs(fileName_Report))
        {
-          QMessageBox::information(this, "Problem", "Error, not opened?", QMessageBox::Ok);
+
+           if (!boBatchProcessing)
+           {
+               QMessageBox::information(this, "Problem", "Error, not opened?", QMessageBox::Ok);
+           }
+           else
+           {
+              qCritical() << "Error: "<< "Problem write to report file (opened?)";
+              iExitCode = knExitStatusReporFileOpened;
+           }
+
        }
        else
        {
-          QMessageBox::information(this, "Written", fileName_Report+"\r\n\r\n"+asReqWritten, QMessageBox::Ok);
+
+           if (!boBatchProcessing)
+           {
+               QMessageBox::information(this, "Written", fileName_Report+"\r\n\r\n"+asReqWritten, QMessageBox::Ok);
+           }
+           else
+           {
+              qWarning() << "Success: " << asReqWritten;
+           }
+
        }
 
     }
     else
     {
-      QMessageBox::information(this, "Problem", "No result doc", QMessageBox::Ok);
+        if (!boBatchProcessing)
+        {
+            QMessageBox::information(this, "Problem", "No result doc", QMessageBox::Ok);
+        }
+        else
+        {
+           qCritical() << "Error: " << "No result doc";
+           iExitCode = knExitStatusNoResultDoc;
+        }
+
     }
 }
 
@@ -459,7 +544,15 @@ void MainWindow::on_btnCompare_clicked()
             fileName_OldReq.isNull()
         )
     {
-        QMessageBox::information(this, "No filenames", "Select Files", QMessageBox::Ok);
+        if (!boBatchProcessing)
+        {
+            QMessageBox::information(this, "No filenames", "Select Files", QMessageBox::Ok);
+        }
+        else
+        {
+           qCritical() << "Error: " << "Invalid input filenames";
+           iExitCode = knExitStatusInvalidInputFilenames;
+        }
         return;
     }
 
@@ -473,7 +566,16 @@ void MainWindow::on_btnCompare_clicked()
 
     if (!newReqDoc.load() || !oldReqDoc.load())
     {
-        QMessageBox::information(this, "Problem", "Problem to load files", QMessageBox::Ok);
+        if (!boBatchProcessing)
+        {
+            QMessageBox::information(this, "Problem", "Problem to load files", QMessageBox::Ok);
+        }
+        else
+        {
+            qCritical() << "Error: " << "Can not load input files";
+            iExitCode = knExitStatusCannotLoadInputFiles;
+        }
+
         return;
     }
 
@@ -756,8 +858,15 @@ void MainWindow::on_btnCompare_clicked()
     //enable sorting
     //ui->tableWidget_Changes->setSortingEnabled(true);
 
+    if (!boBatchProcessing)
+    {
+        QMessageBox::information(this, "Compared", "Lines: " + QString::number(ui->tableWidget_Changes->rowCount()), QMessageBox::Ok);
+    }
+    else
+    {
+       qWarning() << "Compared " <<  QString::number(ui->tableWidget_Changes->rowCount()) << " Lines";
+    }
 
-    QMessageBox::information(this, "Compared", "Lines: " + QString::number(ui->tableWidget_Changes->rowCount()), QMessageBox::Ok);
 
 
 }
