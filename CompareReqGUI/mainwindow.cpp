@@ -133,11 +133,19 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent) :
       if (GetUserNameA(acUserName, &sizeofUserName))asUserAndHostName = acUserName;
 #endif
 #if defined(Q_OS_LINUX)
-      asUserAndHostName = "NameOnLinux";
+      {
+         QProcess process(this);
+         process.setProgram("whoami");
+         process.start();
+         while (process.state() != QProcess::NotRunning) qApp->processEvents();
+         asUserAndHostName = process.readAll();
+         asUserAndHostName = asUserAndHostName.trimmed();
+      }
 #endif
       asUserAndHostName += "@" + QHostInfo::localHostName();
       qDebug() << asUserAndHostName;
 
+      boBatchProcessing = false;
 
       //CLI
       //queued connection - start after leaving constructor in case of batch processing
