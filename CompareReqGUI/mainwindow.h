@@ -74,6 +74,7 @@ private:
     QString newReqFileLastPath;
     QString oldReqFileLastPath;
     QString fileName_Report;
+    QString asCompareCondition;
 
 
     QSettings *iniSettings;

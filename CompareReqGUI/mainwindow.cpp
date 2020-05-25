@@ -81,6 +81,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent) :
     //init.
     newReqFileLastPath = ".//";
     oldReqFileLastPath = ".//";
+    asCompareCondition = "";
 
     //ini files
     QString asIniFileName = QFileInfo( QCoreApplication::applicationFilePath() ).filePath().section(".",0,0)+".ini";
@@ -173,6 +174,11 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent) :
         if(comLineArgList.contains("-w")) ui->cb_IngnoreWaC->setChecked(true);
         else                              ui->cb_IngnoreWaC->setChecked(false);
 
+        if(comLineArgList.contains("-p")) ui->cb_IgnoreProject->setChecked(true);
+        else                              ui->cb_IgnoreProject->setChecked(false);
+
+        if(comLineArgList.contains("-l")) ui->cb_IgnoreLinks->setChecked(true);
+        else                              ui->cb_IgnoreLinks->setChecked(false);
 
 
         //check for batch processing (without window)
@@ -223,6 +229,7 @@ void MainWindow::EmptyChangesTable()
        }
      }
      ui->tableWidget_Changes->setRowCount(0);
+     ui->btnWrite->setEnabled(false);
 }
 
 
@@ -271,10 +278,6 @@ void MainWindow::on_btnWrite_clicked()
     reportDoc.write(iReportCurrentRow++, 1, "generated on: " + QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm:ss"));
     reportDoc.write(iReportCurrentRow++, 1, "new file: " + fileName_NewReq);
     reportDoc.write(iReportCurrentRow++, 1, "old file: " + fileName_OldReq);
-    QString asCompareCondition = "";
-    if(ui->cbOnlyFuncReq->isChecked()) asCompareCondition += ":Only Function Requiments:";
-    if(ui->cb_IngnoreWaC->isChecked()) asCompareCondition += ":Ignore White Spaces and Case:";
-    if(boBatchProcessing)              asCompareCondition += ":Batch Processing:";
     reportDoc.write(iReportCurrentRow++, 1, asCompareCondition);
     int iRowWhereToWriteNumberOfReqWritten = iReportCurrentRow++;
 
@@ -682,7 +685,7 @@ void MainWindow::on_btnCompare_clicked()
 
     //intersection - headers in both files..
     QStringList lstNewOldHeader = (lstNewHeaders.toSet().intersect(lstOldHeaders.toSet())).toList();
-    lstNewOldHeader.sort();
+    lstNewOldHeader.sort();    
     //qDebug() << lstNewOldHeader;
 
     //Test Columns
@@ -702,6 +705,12 @@ void MainWindow::on_btnCompare_clicked()
     for (int oldRow = kn_FistDataRow; oldRow <= oldLastRow; ++oldRow)
     {
        QString asOldReqID = getCellValue(oldRow, kn_ReqIDCol, oldReqDoc,  true);
+       //ignore project prefix
+       if(ui->cb_IgnoreProject->isChecked())
+       {
+           asOldReqID = asOldReqID.remove(0, asOldReqID.indexOf("TSAnS"));
+       }
+
        lstOldReqIDs << asOldReqID;
        int iOldReqID      = -1; //TODO
 
@@ -710,6 +719,12 @@ void MainWindow::on_btnCompare_clicked()
        for(int newRow = kn_FistDataRow; newRow <= newLastRow; ++newRow)
        {
          QString asNewReqID = getCellValue(newRow, kn_ReqIDCol, newReqDoc, true);
+         //ignore project prefix
+         if(ui->cb_IgnoreProject->isChecked())
+         {
+              asNewReqID = asNewReqID.remove(0, asNewReqID.indexOf("TSAnS"));
+         }
+
          int iNewReqID    = -1; //TODO
          //add ids only once
          if(oldRow == kn_FistDataRow)
@@ -725,6 +740,12 @@ void MainWindow::on_btnCompare_clicked()
              //and now check every column which is in both files.. //TODO maybe better in at least one!!
              foreach (QString asHeader, lstNewOldHeader)
              {
+                //ignore column with links
+                if(ui->cb_IgnoreLinks->isChecked())
+                {
+                   if(asHeader.contains("Out-links", Qt::CaseInsensitive)) continue;
+                }
+
                 QString asNewColValue =  getCellValue(newRow, mapNewHeaders[asHeader], newReqDoc, true);
                 QString asOldColValue =  getCellValue(oldRow, mapOldHeaders[asHeader], oldReqDoc, true);
                 if(ui->cb_IngnoreWaC->isChecked())
@@ -874,6 +895,18 @@ void MainWindow::on_btnCompare_clicked()
     {
        qWarning() << "Compared " <<  QString::number(ui->tableWidget_Changes->rowCount()) << " Lines";
     }
+
+    asCompareCondition = "";
+    if(ui->cbOnlyFuncReq->isChecked())    asCompareCondition += ":Only Function Requiments:";
+    if(ui->cb_IngnoreWaC->isChecked())    asCompareCondition += ":Ignore White Spaces and Case:";
+    if(ui->cb_IgnoreProject->isChecked()) asCompareCondition += ":Ignore Project:";
+    if(ui->cb_IgnoreLinks->isChecked())   asCompareCondition += ":Ignore Links:";
+    if(boBatchProcessing)                 asCompareCondition += ":Batch Processing:";
+
+    //allow export
+    ui->btnWrite->setEnabled(true);
+
+
 
 
 

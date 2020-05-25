@@ -89,21 +89,43 @@
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="cb_IngnoreWaC">
-         <property name="text">
-          <string>Ignore White spaces and Case</string>
-         </property>
-        </widget>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QCheckBox" name="cb_IngnoreWaC">
+           <property name="text">
+            <string>Ignore White spaces and Case</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_IgnoreProject">
+           <property name="text">
+            <string>Ignore Project</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
-        <widget class="QCheckBox" name="cbOnlyFuncReq">
-         <property name="text">
-          <string>Only Func.Req</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QCheckBox" name="cbOnlyFuncReq">
+           <property name="text">
+            <string>Only Func.Req</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_IgnoreLinks">
+           <property name="text">
+            <string>Ignore Links</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="QPushButton" name="btnCompare">

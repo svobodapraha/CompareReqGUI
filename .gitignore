@@ -2,3 +2,5 @@
 /build*
 /deploy
 /TestFiles
+**/*.zip
+
