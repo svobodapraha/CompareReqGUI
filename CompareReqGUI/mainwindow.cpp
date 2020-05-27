@@ -321,8 +321,8 @@ void MainWindow::on_btnWrite_clicked()
          if(ui->tableWidget_Changes->item(irow, icol) != NULL)
          {
            Format cellFormat;
-           QColor cellColor = ui->tableWidget_Changes->item(irow, icol)->backgroundColor();
-           if(cellColor.isValid())
+           QColor cellColor = ui->tableWidget_Changes->item(irow, icol)->background().color();
+           if((cellColor.isValid()) && (cellColor != Qt::black))
            {
                //qDebug() << cellColor;
                cellFormat.setPatternBackgroundColor(cellColor);
@@ -383,8 +383,8 @@ void MainWindow::on_btnWrite_clicked()
          if(ui->tableWidget_Changes->item(irow, icol) != NULL)
          {
            Format cellFormat;
-           QColor cellColor = ui->tableWidget_Changes->item(irow, icol)->backgroundColor();
-           if(cellColor.isValid())
+           QColor cellColor = ui->tableWidget_Changes->item(irow, icol)->background().color();
+           if((cellColor.isValid()) && (cellColor != Qt::black))
            {
                //qDebug() << cellColor;
                cellFormat.setPatternBackgroundColor(cellColor);
@@ -526,7 +526,8 @@ void MainWindow::on_btnNewReq_clicked()
 
 void MainWindow::on_lineEdit_NewReq_textEdited(const QString &arg1)
 {
-  //new files - table is not valid for them
+    Q_UNUSED(arg1)
+    //new files - table is not valid for them
     EmptyChangesTable();
 }
 
@@ -555,6 +556,7 @@ void MainWindow::on_btnOldReq_clicked()
 
 void MainWindow::on_lineEdit_OldReq_textEdited(const QString &arg1)
 {
+      Q_UNUSED(arg1)
     //new files - table is not valid for them
       EmptyChangesTable();
 }
@@ -635,6 +637,9 @@ void MainWindow::on_btnCompare_clicked()
     int maxLastRow = (newLastRow > oldLastRow) ? newLastRow : oldLastRow;
     int maxLastCol = (newLastCol > oldLastCol) ? newLastCol : oldLastCol;
 
+    Q_UNUSED(maxLastRow)
+    Q_UNUSED(maxLastCol)
+
     //qDebug() <<newLastRow << newLastCol << oldLastRow << oldLastCol << maxLastRow << maxLastCol;
 
 
@@ -706,8 +711,10 @@ void MainWindow::on_btnCompare_clicked()
     //qDebug() << lstOldHeaders << mapOldHeaders;
 
     //intersection - headers in both files..
-    QStringList lstNewOldHeader = (lstNewHeaders.toSet().intersect(lstOldHeaders.toSet())).toList();
-    lstNewOldHeader.sort();    
+    QStringList lstNewOldHeader =  (QSet<QString>(lstNewHeaders.begin(), lstNewHeaders.end())
+                                   .intersect(QSet<QString>(lstOldHeaders.begin(), lstOldHeaders.end()))).values();
+
+    lstNewOldHeader.sort();
     //qDebug() << lstNewOldHeader;
 
     //Test Columns
@@ -740,6 +747,7 @@ void MainWindow::on_btnCompare_clicked()
 
        lstOldReqIDs << asOldReqID;
        int iOldReqID      = -1; //TODO
+       Q_UNUSED(iOldReqID)
 
        //and compare with every row in new file..
        bool bo_idFound = false;
@@ -759,6 +767,7 @@ void MainWindow::on_btnCompare_clicked()
 
 
          int iNewReqID    = -1; //TODO
+         Q_UNUSED(iNewReqID)
          //add ids only once
          if(oldRow == kn_FistDataRow)
          {
@@ -836,18 +845,18 @@ void MainWindow::on_btnCompare_clicked()
                    //another column from the same request.. - set Requirement column to light grey backroud
                    if(boSameReq)
                    {
-                       ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_requirement)->setBackgroundColor(QColor(Qt::lightGray));
-                       ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_req_short)->setBackgroundColor(QColor(Qt::lightGray));
+                       ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_requirement)->setBackground(QBrush(QColor(Qt::lightGray)));
+                       ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_req_short)->setBackground(QBrush(QColor(Qt::lightGray)));
 
                        //denote previous line also - should belog to the same req id
                        if (ui->tableWidget_Changes->rowCount() > 2)
                        {
                            QTableWidgetItem * tmpTableWidgetItem = nullptr;
                            tmpTableWidgetItem = ui->tableWidget_Changes->item((ui->tableWidget_Changes->rowCount()-1)-1, col_infotable_requirement);
-                           if(tmpTableWidgetItem)tmpTableWidgetItem->setBackgroundColor(QColor(Qt::lightGray));
+                           if(tmpTableWidgetItem)tmpTableWidgetItem->setBackground(QBrush(QColor(Qt::lightGray)));
 
                            tmpTableWidgetItem = ui->tableWidget_Changes->item((ui->tableWidget_Changes->rowCount()-1)-1, col_infotable_req_short);
-                           if(tmpTableWidgetItem)tmpTableWidgetItem->setBackgroundColor(QColor(Qt::lightGray));
+                           if(tmpTableWidgetItem)tmpTableWidgetItem->setBackground(QBrush(QColor(Qt::lightGray)));
                        }
                    }
                    boSameReq = true;
@@ -869,8 +878,8 @@ void MainWindow::on_btnCompare_clicked()
                        asOldColValue = ignoreWhiteAndCase(asOldColValue);
                        if(asOldColValue == asNewColValue)
                        {
-                           ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_old_value)->setBackgroundColor(QColor(Qt::lightGray));
-                           ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_new_value)->setBackgroundColor(QColor(Qt::lightGray));
+                           ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_old_value)->setBackground(QBrush(QColor(Qt::lightGray)));
+                           ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_new_value)->setBackground(QBrush(QColor(Qt::lightGray)));
                        }
 
                    }
@@ -883,7 +892,7 @@ void MainWindow::on_btnCompare_clicked()
                      )
                      {
                        ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_status)->setText("Changed(not FR)");
-                       ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_status)->setBackgroundColor(QColor(Qt::yellow));
+                       ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_status)->setBackground(QBrush(QColor(Qt::yellow)));
                      }
 
                 }
@@ -903,13 +912,15 @@ void MainWindow::on_btnCompare_clicked()
            ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_requirement, new QTableWidgetItem(asOldReqID));
            ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_req_short, new QTableWidgetItem(getCellValue(oldRow, kn_ReqIDCol, oldReqDoc,  true).section("_", -1)));
            ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_status,      new QTableWidgetItem("Missing"));
-           ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_status)->setBackgroundColor(QColor(Qt::red));
+           ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_status)->setBackground(QBrush(QColor(Qt::red)));
        }
 
 
     }//for (int oldRow = kn_FistDataRow; oldRow <= oldLastRow; ++oldRow)
 
-    QStringList lstNewReqIDsOnly = (lstNewReqIDs.toSet().subtract(lstOldReqIDs.toSet())).toList();
+    QStringList lstNewReqIDsOnly =  (QSet<QString>(lstNewReqIDs.begin(), lstNewReqIDs.end())
+                                     .subtract(QSet<QString>(lstOldReqIDs.begin(), lstOldReqIDs.end()))).values();
+
     lstNewReqIDsOnly.sort();
 
     //Only in new file (new req)
@@ -923,7 +934,7 @@ void MainWindow::on_btnCompare_clicked()
        else
          ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_req_short, new QTableWidgetItem(""));  //TODO
        ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_status,      new QTableWidgetItem("New"));
-       ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_status)->setBackgroundColor(QColor(Qt::green));
+       ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_status)->setBackground(QBrush(QColor(Qt::green)));
 
     }
 
