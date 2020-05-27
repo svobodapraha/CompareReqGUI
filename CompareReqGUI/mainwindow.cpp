@@ -118,6 +118,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent) :
                                               <<"Old Value"
                                               <<"New Value"
                                               <<"User Note"
+                                              << knOrigIDText
                                               ;
 
       ui->tableWidget_Changes->setColumnCount(tableHeader.count());
@@ -294,6 +295,8 @@ void MainWindow::on_btnWrite_clicked()
      reportDoc.write(iReportCurrentRow,     5, "Old Value", font_bold);         reportDoc.setColumnWidth(5, 75);
      reportDoc.write(iReportCurrentRow,     6, "New Value", font_bold);         reportDoc.setColumnWidth(6, 75);
      reportDoc.write(iReportCurrentRow,     7, "User Notes", font_bold);        reportDoc.setColumnWidth(7, 50);
+     reportDoc.write(iReportCurrentRow,     8, knOrigIDText, font_bold);        reportDoc.setColumnWidth(8, 23);
+
 
      //new row
      iReportCurrentRow++;
@@ -376,6 +379,7 @@ void MainWindow::on_btnWrite_clicked()
        bool boExtraRow = false;
        for (int icol = 0; icol < ui->tableWidget_Changes->columnCount(); ++icol)
        {
+         if(icol == col_infotable_origID) continue;
          if(ui->tableWidget_Changes->item(irow, icol) != NULL)
          {
            Format cellFormat;
@@ -424,6 +428,19 @@ void MainWindow::on_btnWrite_clicked()
              boExtraRow = true;
            }
            reportDoc.write(iWriteToExcelRow, iWriteToExcelCol, asTableContent, cellFormat);
+
+           //write origin ID behind parameter name
+           if(icol == col_infotable_par_name)
+           {
+              if(ui->tableWidget_Changes->item(irow, col_infotable_origID) != NULL)
+              {
+                 asTableContent = ui->tableWidget_Changes->item(irow, col_infotable_origID)->text();
+                 asTableContent = asTableContent.trimmed();
+                 if(!asTableContent.isEmpty()) asTableContent = "(" +asTableContent + ")";
+                 reportDoc.write(iWriteToExcelRow, iWriteToExcelCol+1, asTableContent, cellFormat);
+              }
+           }
+
 
 
          }
@@ -602,6 +619,11 @@ void MainWindow::on_btnCompare_clicked()
                         QFileInfo(fileName_OldReq).completeBaseName()+
                         ".xlsx";
 
+    fileName_OldReqCor = QFileInfo(fileName_OldReq).path() + "/" +
+                         QFileInfo(fileName_OldReq).completeBaseName()+ 
+                         "_cor"
+                         ".xlsx";                         
+
     //qDebug() << fileName_NewReq << fileName_OldReq << fileName_Report;
 
 
@@ -651,7 +673,7 @@ void MainWindow::on_btnCompare_clicked()
     QMap<QString, int> mapNewHeaders;
     mapNewHeaders.clear();
 
-    for(int col= kn_FirstHeaderCol; col <= newLastCol; col++)
+    for(int col= kn_ReqIDCol; col <= newLastCol; col++)
     {
       QString asTemp = getCellValue(kn_HeaderRow, col, newReqDoc, true);
       mapNewHeaders[asTemp] = col;
@@ -668,7 +690,7 @@ void MainWindow::on_btnCompare_clicked()
     QMap<QString, int> mapOldHeaders;
     mapOldHeaders.clear();
 
-    for(int col= kn_FirstHeaderCol; col <= oldLastCol; col++)
+    for(int col= kn_ReqIDCol; col <= oldLastCol; col++)
     {
         QString asTemp = getCellValue(kn_HeaderRow, col, oldReqDoc, true);
         lstOldHeaders << asTemp;
@@ -711,6 +733,11 @@ void MainWindow::on_btnCompare_clicked()
            asOldReqID = asOldReqID.remove(0, asOldReqID.indexOf("TSAnS"));
        }
 
+       if(ui->cb_UseGUID->isChecked())
+       {
+          asOldReqID = getCellValue(oldRow, mapOldHeaders["GUID"], oldReqDoc, true);
+       }
+
        lstOldReqIDs << asOldReqID;
        int iOldReqID      = -1; //TODO
 
@@ -724,6 +751,12 @@ void MainWindow::on_btnCompare_clicked()
          {
               asNewReqID = asNewReqID.remove(0, asNewReqID.indexOf("TSAnS"));
          }
+
+         if(ui->cb_UseGUID->isChecked())
+         {
+             asNewReqID = getCellValue(newRow, mapNewHeaders["GUID"], newReqDoc, true);
+         }
+
 
          int iNewReqID    = -1; //TODO
          //add ids only once
@@ -744,6 +777,20 @@ void MainWindow::on_btnCompare_clicked()
                 if(ui->cb_IgnoreLinks->isChecked())
                 {
                    if(asHeader.contains("Out-links", Qt::CaseInsensitive)) continue;
+                }
+
+                //ignore other columns
+                if(ui->cb_IgnoreOthers->isChecked())
+                {
+                   if(asHeader.contains("ID Original", Qt::CaseInsensitive)) continue;
+                   if(asHeader.contains("Source",      Qt::CaseInsensitive)) continue;
+                   if(asHeader.contains("GUID",        Qt::CaseInsensitive)) continue;
+
+                }
+
+                if(ui->cb_IgnoreID->isChecked())
+                {
+                   if(asHeader == "ID") continue;
                 }
 
                 QString asNewColValue =  getCellValue(newRow, mapNewHeaders[asHeader], newReqDoc, true);
@@ -769,12 +816,22 @@ void MainWindow::on_btnCompare_clicked()
                   )
                 //different
                 {
-                   //qDebug() << "different:";
-                   //qDebug() << asOldReqID << asHeader <<  asOldColValue << asNewColValue;
+                   qDebug() << "different:";
+                   qDebug() << asOldReqID << asHeader <<  asOldColValue << asNewColValue;
 
                    ui->tableWidget_Changes->insertRow(ui->tableWidget_Changes->rowCount());
                    ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_requirement, new QTableWidgetItem(asOldReqID));
-                   ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_req_short, new QTableWidgetItem(asOldReqID.section("_", -1)));
+                   QString asShort = "";
+                   if (!ui->cb_UseGUID->isChecked())
+                   {
+                      asShort = asOldReqID.section("_", -1);
+                   }
+                   else
+                   {
+                      asShort = getCellValue(oldRow, kn_ReqIDCol, oldReqDoc,  true).section("_", -1) + "/" +
+                                getCellValue(newRow, kn_ReqIDCol, newReqDoc, true).section("_", -1);
+                   }
+                   ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_req_short, new QTableWidgetItem(asShort));
 
                    //another column from the same request.. - set Requirement column to light grey backroud
                    if(boSameReq)
@@ -800,6 +857,8 @@ void MainWindow::on_btnCompare_clicked()
                    ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_par_name,  new QTableWidgetItem(asHeader));
                    ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_old_value, new QTableWidgetItem(asOldColValue));
                    ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_new_value, new QTableWidgetItem(asNewColValue));
+                   QString asOrigID = getCellValue(oldRow, mapOldHeaders[knOrigIDText], oldReqDoc, true);
+                   ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_origID, new QTableWidgetItem(asOrigID));
 
                    //if compare without demand for ignorig white space and case, compare once more ignored and if same (e.g. difference is only in spaces and case
                    //set the backroud to light grey
@@ -842,7 +901,7 @@ void MainWindow::on_btnCompare_clicked()
            //qDebug() << asOldReqID;
            ui->tableWidget_Changes->insertRow(ui->tableWidget_Changes->rowCount());
            ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_requirement, new QTableWidgetItem(asOldReqID));
-           ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_req_short, new QTableWidgetItem(asOldReqID.section("_", -1)));
+           ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_req_short, new QTableWidgetItem(getCellValue(oldRow, kn_ReqIDCol, oldReqDoc,  true).section("_", -1)));
            ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_status,      new QTableWidgetItem("Missing"));
            ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_status)->setBackgroundColor(QColor(Qt::red));
        }
@@ -859,7 +918,10 @@ void MainWindow::on_btnCompare_clicked()
        //qDebug() << "New ID only "  << asNewIDOnly;
        ui->tableWidget_Changes->insertRow(ui->tableWidget_Changes->rowCount());
        ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_requirement, new QTableWidgetItem(asNewIDOnly));
-       ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_req_short, new QTableWidgetItem(asNewIDOnly.section("_", -1)));
+       if (!ui->cb_UseGUID->isChecked())
+         ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_req_short, new QTableWidgetItem(asNewIDOnly.section("_", -1)));
+       else
+         ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_req_short, new QTableWidgetItem(""));  //TODO
        ui->tableWidget_Changes->setItem(ui->tableWidget_Changes->rowCount()-1, col_infotable_status,      new QTableWidgetItem("New"));
        ui->tableWidget_Changes->item(ui->tableWidget_Changes->rowCount()-1, col_infotable_status)->setBackgroundColor(QColor(Qt::green));
 
@@ -897,13 +959,122 @@ void MainWindow::on_btnCompare_clicked()
     }
 
     asCompareCondition = "";
-    if(ui->cbOnlyFuncReq->isChecked())    asCompareCondition += ":Only Function Requiments:";
-    if(ui->cb_IngnoreWaC->isChecked())    asCompareCondition += ":Ignore White Spaces and Case:";
-    if(ui->cb_IgnoreProject->isChecked()) asCompareCondition += ":Ignore Project:";
-    if(ui->cb_IgnoreLinks->isChecked())   asCompareCondition += ":Ignore Links:";
-    if(boBatchProcessing)                 asCompareCondition += ":Batch Processing:";
+    if(ui->cbOnlyFuncReq->isChecked())          asCompareCondition += ":Only Function Requiments:";
+    if(ui->cb_IngnoreWaC->isChecked())          asCompareCondition += ":Ignore White Spaces and Case:";
+    if(ui->cb_IgnoreProject->isChecked())       asCompareCondition += ":Ignore Project:";
+    if(ui->cb_IgnoreLinks->isChecked())         asCompareCondition += ":Ignore Links:";
+    if(ui->cb_IgnoreOthers->isChecked())        asCompareCondition += ":Ignore Others:";
+    if(ui->cb_FindSimilarFromNew->isChecked())  asCompareCondition += ":Find Similar:";
+    if(ui->cb_UseGUID->isChecked())             asCompareCondition += ":Use GUID:";
+    if(ui->cb_IgnoreID->isChecked())            asCompareCondition += ":Ignore ID:";
+    if(boBatchProcessing)                       asCompareCondition += ":Batch Processing:";
 
-    //allow export
+//Try to find if some req with differnt ID did not match in some parts
+    if(ui->cb_FindSimilarFromNew->isChecked())
+    {
+      QXlsx::Document oldReqDocCor(fileName_OldReq);
+      //insert column for Original ID
+      for (int oldRow = kn_HeaderRow; oldRow <= oldLastRow; ++oldRow)
+      {
+         for(int col= oldLastCol; col > kn_ReqIDCol; col--)
+         {
+            oldReqDocCor.write(oldRow, col+1, getCellValue(oldRow, col, oldReqDocCor));
+            if(col == kn_ReqIDCol+1)
+                oldReqDocCor.write(oldRow, col, "");
+
+         }
+      }
+      //Add Header for Original ID
+      oldReqDocCor.write(kn_HeaderRow, kn_ReqIDCol + 1, knOrigIDText);
+
+      //similarView->clear();
+      foreach (QString asNewIDOnly, lstNewReqIDsOnly)
+      {
+        //find again - we need data from another columns
+        for(int newRow = kn_FistDataRow; newRow <= newLastRow; ++newRow)
+        {  	   
+          QString asNewReqID = getCellValue(newRow, kn_ReqIDCol, newReqDoc, true);
+          //ignore project prefix
+          if(ui->cb_IgnoreProject->isChecked())
+          {
+            asNewReqID = asNewReqID.remove(0, asNewReqID.indexOf("TSAnS"));
+          }
+            
+          //save data from "Requirement" and "Architecture Remark" column
+          if(asNewReqID == asNewIDOnly)
+          {
+            QString asNewRequirement = getCellValueWCIgnored(newRow, mapNewHeaders["Requirement"], newReqDoc);
+            QString asNewArchRemark     = getCellValueWCIgnored(newRow, mapNewHeaders["Architecture Remark"], newReqDoc);
+            //qDebug() << asNewReqID << asArchRemark;
+            //try to find in old doc
+            for (int oldRow = kn_FistDataRow; oldRow <= oldLastRow; ++oldRow)
+            {
+              QString asOldReqID = getCellValue(oldRow, kn_ReqIDCol, oldReqDoc,  true);
+              //ignore project prefix
+              if(ui->cb_IgnoreProject->isChecked())
+              {
+                asOldReqID = asOldReqID.remove(0, asOldReqID.indexOf("TSAnS"));
+              }
+              QString asOldRequirement = getCellValueWCIgnored(oldRow, mapNewHeaders["Requirement"], oldReqDoc);
+              QString asOldArchRemark  = getCellValueWCIgnored(oldRow, mapNewHeaders["Architecture Remark"], oldReqDoc);
+              if(
+                   ((asNewRequirement == asOldRequirement) && (!asNewRequirement.isEmpty())) ||
+                   ((asNewArchRemark  == asOldArchRemark)  && (!asNewArchRemark.isEmpty()))
+                )
+              {
+                oldReqDocCor.write(oldRow, kn_ReqIDCol, asNewReqID);
+                oldReqDocCor.write(oldRow, kn_ReqIDCol + 1, asOldReqID);
+
+//                similarView->addRow(asNewReqID,
+//                                    asOldReqID,
+//                                    asNewRequirement,
+//                                    asOldRequirement,
+//                                    asNewArchRemark,
+//                                    asOldArchRemark);
+                qDebug() << oldRow << newRow
+                         << asNewReqID
+                         << asOldReqID
+                         << asNewRequirement
+                         << asOldRequirement
+                         << asNewArchRemark;
+              }//if
+            }//for (int oasOldArchRemark);ldRow = kn_FistDataRow; oldRow <= oldLastRow; ++oldRow)
+          }//if(asNewReqID == asNewIDOnly)
+        }//for(int newRow = kn_FistDataRow; newRow <= newLastRow; ++newRow)
+      }//foreach (QString asNewIDOnly, lstNewReqIDsOnly)
+
+      //write corrected file
+      if(!oldReqDocCor.saveAs(fileName_OldReqCor))
+      {
+
+          if (!boBatchProcessing)
+          {
+              QMessageBox::information(this, "Problem", "Problem write corrected file (opened?)", QMessageBox::Ok);
+          }
+          else
+          {
+             qCritical() << "Error: "<< "Problem write corrected file (opened?)";
+             iExitCode = knExitStatusCorrectedFileOpened;
+          }
+
+      }
+      else
+      {
+
+          if (!boBatchProcessing)
+          {
+              QMessageBox::information(this, "Corrected file written", fileName_OldReqCor, QMessageBox::Ok);
+          }
+          else
+          {
+             qWarning() << "Success: " << "Corrected file writen to " + fileName_OldReqCor;
+          }
+
+      }
+    }//if(ui->cb_FindSimilarFromNew.isChecked())
+
+    //allow export, disable similar
+    ui->cb_FindSimilarFromNew->setChecked(false);
     ui->btnWrite->setEnabled(true);
 
 

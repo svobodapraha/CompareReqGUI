@@ -93,7 +93,7 @@
          <item>
           <widget class="QCheckBox" name="cb_IngnoreWaC">
            <property name="text">
-            <string>Ignore White spaces and Case</string>
+            <string>Ignore Whites and Case</string>
            </property>
           </widget>
          </item>
@@ -101,6 +101,20 @@
           <widget class="QCheckBox" name="cb_IgnoreProject">
            <property name="text">
             <string>Ignore Project</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_FindSimilarFromNew">
+           <property name="text">
+            <string>Try to find similar for new</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_UseGUID">
+           <property name="text">
+            <string>Use GUID</string>
            </property>
           </widget>
          </item>
@@ -122,6 +136,29 @@
           <widget class="QCheckBox" name="cb_IgnoreLinks">
            <property name="text">
             <string>Ignore Links</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_IgnoreOthers">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ignore &lt;/p&gt;&lt;p&gt;GUID&lt;/p&gt;&lt;p&gt;Source&lt;/p&gt;&lt;p&gt;ID Original (DXL)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Ignore Others</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_IgnoreID">
+           <property name="text">
+            <string>Ignore ID</string>
            </property>
           </widget>
          </item>

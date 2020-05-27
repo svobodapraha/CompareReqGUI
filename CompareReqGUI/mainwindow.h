@@ -71,6 +71,7 @@ private:
 private:
     QString fileName_NewReq;
     QString fileName_OldReq;
+    QString fileName_OldReqCor;
     QString newReqFileLastPath;
     QString oldReqFileLastPath;
     QString fileName_Report;
@@ -104,6 +105,7 @@ private:
 #define col_infotable_old_value         5
 #define col_infotable_new_value         6
 #define col_infotable_user_comment      7
+#define col_infotable_origID            8
 
 
 #define kn_ReportFirstInfoRow           1
@@ -115,6 +117,9 @@ private:
 #define knExitStatusInvalidInputFilenames   3
 #define knExitStatusCannotLoadInputFiles    4
 #define knExitStatusNoResultDoc             5
+#define knExitStatusCorrectedFileOpened     6
+
+#define knOrigIDText     ("Original Old ID")
 
 
 
