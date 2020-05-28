@@ -75,18 +75,22 @@
         <enum>QLayout::SetDefaultConstraint</enum>
        </property>
        <item>
-        <widget class="QPushButton" name="btn_CheckAll">
-         <property name="text">
-          <string>CHECK ALL</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="btn_SortReq">
-         <property name="text">
-          <string>SORT REQ</string>
-         </property>
-        </widget>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <widget class="QPushButton" name="btn_CheckAll">
+           <property name="text">
+            <string>CHECK ALL</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btn_SortReq">
+           <property name="text">
+            <string>SORT REQ</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -160,23 +164,62 @@
            <property name="text">
             <string>Ignore ID</string>
            </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
         </layout>
        </item>
        <item>
-        <widget class="QPushButton" name="btnCompare">
-         <property name="text">
-          <string>COMPARE</string>
-         </property>
-        </widget>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QCheckBox" name="cb_HideNew">
+           <property name="text">
+            <string>Hide New</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_HideMissing">
+           <property name="text">
+            <string>Hide Missing</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_UseOriginalID">
+           <property name="text">
+            <string>Use Original ID</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_Reserve1">
+           <property name="text">
+            <string>Reserve1</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
-        <widget class="QPushButton" name="btnWrite">
-         <property name="text">
-          <string>WRITE</string>
-         </property>
-        </widget>
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <item>
+          <widget class="QPushButton" name="btnCompare">
+           <property name="text">
+            <string>COMPARE</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnWrite">
+           <property name="text">
+            <string>WRITE</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <spacer name="horizontalSpacer">
